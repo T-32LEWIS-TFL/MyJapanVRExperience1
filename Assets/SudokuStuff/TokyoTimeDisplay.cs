@@ -1,70 +1,37 @@
-using TMPro;
-using UnityEngine;
-using System;
+using TMPro; // For TMP_Text component
+using UnityEngine; // Unity engine base types
+using System; // For DateTime and TimeZoneInfo
 
-public class TokyoTimeDisplay : MonoBehaviour
+public class TokyoTimeDisplay : MonoBehaviour // Attach this script to a UI object
 {
     [Tooltip("Drag your TextMeshPro‑UGUI here")]
-    public TMP_Text timeText;
+    public TMP_Text timeText; // Reference to the UI text component that shows the time
 
-    TimeZoneInfo tokyoZone;
-    bool useRandomTime = false; // Flag to fall back to random time
+    TimeZoneInfo tokyoZone; // Will hold the Tokyo time zone info
 
     void Start()
     {
+        // On Windows this is "Tokyo Standard Time", on mac/Linux "Asia/Tokyo"
         try
         {
-            tokyoZone = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time");
+            tokyoZone = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time"); // Try Windows ID
         }
         catch (TimeZoneNotFoundException)
         {
-            try
-            {
-                tokyoZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");
-            }
-            catch (TimeZoneNotFoundException)
-            {
-                useRandomTime = true; // If both fail, use random time
-            }
+            tokyoZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo"); // Fallback for macOS/Linux
         }
 
-        UpdateTime();
+        UpdateTime(); // Update immediately on start
 
-        var secondsUntilNextMinute = 60 - DateTime.UtcNow.Second;
-        InvokeRepeating(nameof(UpdateTime), secondsUntilNextMinute, 60f);
+        var secondsUntilNextMinute = 60 - DateTime.UtcNow.Second; // Calculate delay to sync with next full minute
+        InvokeRepeating(nameof(UpdateTime), secondsUntilNextMinute, 60f); // Then update every 60s
     }
 
     void UpdateTime()
     {
-        DateTime displayTime;
+        DateTime utc = DateTime.UtcNow; // Get current UTC time
+        DateTime tokyo = TimeZoneInfo.ConvertTimeFromUtc(utc, tokyoZone); // Convert to Tokyo time
 
-        if (!useRandomTime)
-        {
-            try
-            {
-                DateTime utc = DateTime.UtcNow;
-                displayTime = TimeZoneInfo.ConvertTimeFromUtc(utc, tokyoZone);
-            }
-            catch
-            {
-                // If conversion fails at runtime
-                useRandomTime = true;
-                displayTime = GetRandomTime();
-            }
-        }
-        else
-        {
-            displayTime = GetRandomTime();
-        }
-
-        timeText.text = $"In Japan, it is currently {displayTime:HH:mm}";
-    }
-
-    DateTime GetRandomTime()
-    {
-        System.Random rand = new System.Random();
-        int hour = rand.Next(0, 24);
-        int minute = rand.Next(0, 60);
-        return new DateTime(1, 1, 1, hour, minute, 0);
+        timeText.text = $"In Japan, it is currently {tokyo:HH:mm}"; // Format and display the time
     }
 }
