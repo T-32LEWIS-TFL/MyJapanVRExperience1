@@ -1,41 +1,37 @@
-using TMPro;
-using UnityEngine;
-using System;
+using TMPro; // For TMP_Text component
+using UnityEngine; // Unity engine base types
+using System; // For DateTime and TimeZoneInfo
 
-public class TokyoTimeDisplay : MonoBehaviour
+public class TokyoTimeDisplay : MonoBehaviour // Attach this script to a UI object
 {
     [Tooltip("Drag your TextMeshPro‑UGUI here")]
-    public TMP_Text timeText;
+    public TMP_Text timeText; // Reference to the UI text component that shows the time
 
-    TimeZoneInfo tokyoZone;
+    TimeZoneInfo tokyoZone; // Will hold the Tokyo time zone info
 
     void Start()
     {
         // On Windows this is "Tokyo Standard Time", on mac/Linux "Asia/Tokyo"
         try
         {
-            tokyoZone = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time");
+            tokyoZone = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time"); // Try Windows ID
         }
         catch (TimeZoneNotFoundException)
         {
-            tokyoZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");
+            tokyoZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo"); // Fallback for macOS/Linux
         }
 
-        // First update right away…
-        UpdateTime();
+        UpdateTime(); // Update immediately on start
 
-        // …then every minute on the minute
-        var secondsUntilNextMinute = 60 - DateTime.UtcNow.Second;
-        InvokeRepeating(nameof(UpdateTime), secondsUntilNextMinute, 60f);
+        var secondsUntilNextMinute = 60 - DateTime.UtcNow.Second; // Calculate delay to sync with next full minute
+        InvokeRepeating(nameof(UpdateTime), secondsUntilNextMinute, 60f); // Then update every 60s
     }
 
     void UpdateTime()
     {
-        // Get UTC now, convert to Tokyo
-        DateTime utc = DateTime.UtcNow;
-        DateTime tokyo = TimeZoneInfo.ConvertTimeFromUtc(utc, tokyoZone);
+        DateTime utc = DateTime.UtcNow; // Get current UTC time
+        DateTime tokyo = TimeZoneInfo.ConvertTimeFromUtc(utc, tokyoZone); // Convert to Tokyo time
 
-        // Format e.g. “In Japan, it is currently 14:27”
-        timeText.text = $"In Japan, it is currently {tokyo:HH:mm}";
+        timeText.text = $"In Japan, it is currently {tokyo:HH:mm}"; // Format and display the time
     }
 }
